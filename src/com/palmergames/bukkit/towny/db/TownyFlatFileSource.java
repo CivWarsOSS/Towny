@@ -1792,7 +1792,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		// Metadata
 		StringBuilder md = new StringBuilder();
 		if (resident.hasMeta()) {
-			HashSet<CustomDataField> tdata = resident.getMetadata();
+			HashSet<CustomDataField> tdata = resident.get_metadata();
 			for (CustomDataField cdf : tdata) {
 				md.append(cdf.toString()).append(";");
 			}
@@ -1913,7 +1913,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		// Metadata
 		StringBuilder md = new StringBuilder();
 		if (town.hasMeta()) {
-			HashSet<CustomDataField> tdata = town.getMetadata();
+			HashSet<CustomDataField> tdata = town.get_metadata();
 			for (CustomDataField cdf : tdata) {
 				md.append(cdf.toString()).append(";");
 			}
@@ -2000,7 +2000,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		// Metadata
 		StringBuilder md = new StringBuilder();
 		if (nation.hasMeta()) {
-			HashSet<CustomDataField> tdata = nation.getMetadata();
+			HashSet<CustomDataField> tdata = nation.get_metadata();
 			for (CustomDataField cdf : tdata) {
 				md.append(cdf.toString()).append(";");
 			}
@@ -2141,7 +2141,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		// Metadata
 		StringBuilder md = new StringBuilder();
 		if (world.hasMeta()) {
-			HashSet<CustomDataField> tdata = world.getMetadata();
+			HashSet<CustomDataField> tdata = world.get_metadata();
 			for (CustomDataField cdf : tdata) {
 				md.append(cdf.toString()).append(";");
 			}
@@ -2218,7 +2218,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		// Metadata
 		StringBuilder md = new StringBuilder();
 		if (townBlock.hasMeta()) {
-			HashSet<CustomDataField> tdata = townBlock.getMetadata();
+			HashSet<CustomDataField> tdata = townBlock.get_metadata();
 			for (CustomDataField cdf : tdata) {
 				md.append(cdf.toString()).append(";");
 			}

@@ -406,10 +406,10 @@ public class TownBlock extends TownyObject {
 	}
 	
 	public void addMetaData(CustomDataField md) {
-		if (getMetadata() == null)
+		if (get_metadata() == null)
 			metadata = new HashSet<>();
 		
-		getMetadata().add(md);
+		get_metadata().add(md);
 		TownyUniverse.getInstance().getDataSource().saveTownBlock(this);
 	}
 	
@@ -417,20 +417,20 @@ public class TownBlock extends TownyObject {
 		if (!hasMeta())
 			return;
 		
-		getMetadata().remove(md);
+		get_metadata().remove(md);
 
-		if (getMetadata().size() == 0)
+		if (get_metadata().size() == 0)
 			this.metadata = null;
 
 		TownyUniverse.getInstance().getDataSource().saveTownBlock(this);
 	}
 
-	public HashSet<CustomDataField> getMetadata() {
+	public HashSet<CustomDataField> get_metadata() {
 		return metadata;
 	}
 
 	public boolean hasMeta() {
-		return getMetadata() != null;
+		return get_metadata() != null;
 	}
 
 	public void setMetadata(String str) {

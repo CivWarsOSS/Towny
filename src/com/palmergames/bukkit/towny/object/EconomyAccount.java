@@ -15,21 +15,27 @@ import org.bukkit.World;
  * @author Shade
  * @author Suneet Tipirneni (Siris)
  */
-public class EconomyAccount extends TownyObject {
+public class EconomyAccount implements Nameable {
 	public static final TownyServerAccount SERVER_ACCOUNT = new TownyServerAccount();
 	private World world;
-	
-	protected EconomyAccount(String name, World world) {
-		super(name);
-		this.world = world;
+	private String name;
+
+	protected EconomyAccount(String name) {
+		this.name = name;
 	}
 	
-	protected EconomyAccount(String name) {
-		super(name);
+	protected EconomyAccount(String name, World world) {
+		this(name);
+		this.world = world;
 	}
 
 	public World getWorld() {
 		return world;
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 	private static final class TownyServerAccount extends EconomyAccount {

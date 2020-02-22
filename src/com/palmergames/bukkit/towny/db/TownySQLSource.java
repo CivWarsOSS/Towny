@@ -1581,7 +1581,7 @@ public final class TownySQLSource extends TownyDatabaseHandler {
             res_hm.put("protectionStatus", resident.getPermissions().toString().replaceAll(",", "#"));
             
 			if (resident.hasMeta())
-				res_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(resident.getMetadata()), ";"));
+				res_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(resident.get_metadata()), ";"));
 			else
 				res_hm.put("metadata", "");
 
@@ -1628,7 +1628,7 @@ public final class TownySQLSource extends TownyDatabaseHandler {
             twn_hm.put("admindisabledpvp", town.isAdminDisabledPVP());
             twn_hm.put("adminenabledpvp", town.isAdminEnabledPVP());
 			if (town.hasMeta())
-				twn_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(town.getMetadata()), ";"));
+				twn_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(town.get_metadata()), ";"));
 			else
 				twn_hm.put("metadata", "");
         
@@ -1712,7 +1712,7 @@ public final class TownySQLSource extends TownyDatabaseHandler {
             nat_hm.put("isOpen", nation.isOpen());
             
 			if (nation.hasMeta())
-				nat_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(nation.getMetadata()), ";"));
+				nat_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(nation.get_metadata()), ";"));
 			else
 				nat_hm.put("metadata", "");
 
@@ -1813,7 +1813,7 @@ public final class TownySQLSource extends TownyDatabaseHandler {
             nat_hm.put("warAllowed", world.isWarAllowed());
 
 			if (world.hasMeta())
-				nat_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(world.getMetadata()), ";"));
+				nat_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(world.get_metadata()), ";"));
 			else
 				nat_hm.put("metadata", "");
             
@@ -1855,7 +1855,7 @@ public final class TownySQLSource extends TownyDatabaseHandler {
             else
             	tb_hm.put("groupID", "");
             if (townBlock.hasMeta())
-				tb_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(townBlock.getMetadata()), ";"));
+				tb_hm.put("metadata", StringMgmt.join(new ArrayList<CustomDataField>(townBlock.get_metadata()), ";"));
 			else
 				tb_hm.put("metadata", "");
 

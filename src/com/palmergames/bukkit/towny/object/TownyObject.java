@@ -2,16 +2,22 @@ package com.palmergames.bukkit.towny.object;
 
 import com.palmergames.bukkit.towny.TownyFormatter;
 import com.palmergames.bukkit.towny.object.metadata.CustomDataField;
+import com.palmergames.bukkit.towny.object.metadata.Metadatable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
-public abstract class TownyObject implements Nameable {
+public abstract class TownyObject implements Nameable, Metadatable {
 	private String name;
-
-	private HashSet<CustomDataField> metadata = null;
+	
+	@Deprecated
+	private HashSet<CustomDataField> _metadata = null;
+	
+	private HashMap<String, CustomDataField<?>> metadata = null;
 	
 	protected TownyObject(String name) {
 		this.name = name;
@@ -55,41 +61,48 @@ public abstract class TownyObject implements Nameable {
 
 		return TownyFormatter.getFormattedName(this);
 	}
+	
+	@Override
+	public void addMetaData(CustomDataField<?> md) {
+		if (get_metadata() == null)
+			_metadata = new HashSet<>();
 
-	public void addMetaData(CustomDataField md) {
-		if (getMetadata() == null)
-			metadata = new HashSet<>();
-
-		getMetadata().add(md);
+		get_metadata().add(md);
 	}
 
-	public void removeMetaData(CustomDataField md) {
+	@Override
+	public void removeMetaData(CustomDataField<?> md) {
 		if (!hasMeta())
 			return;
 
-		getMetadata().remove(md);
+		get_metadata().remove(md);
 
-		if (getMetadata().size() == 0)
-			this.metadata = null;
+		if (get_metadata().size() == 0)
+			this._metadata = null;
 	}
 
-	public HashSet<CustomDataField> getMetadata() {
-		return metadata;
+	@Deprecated
+	public HashSet<CustomDataField> get_metadata() {
+		return _metadata;
 	}
 
 	public boolean hasMeta() {
-		return getMetadata() != null;
+		return get_metadata() != null;
 	}
 
 	public void setMetadata(String str) {
 
-		if (metadata == null)
-			metadata = new HashSet<>();
+		if (_metadata == null)
+			_metadata = new HashSet<>();
 
 		String[] objects = str.split(";");
 		for (String object : objects) {
-			metadata.add(CustomDataField.load(object));
+			_metadata.add(CustomDataField.load(object));
 		}
 	}
-	
+
+	@Override
+	public Map<String, CustomDataField<?>> getMetaData() {
+		return metadata;
+	}
 }

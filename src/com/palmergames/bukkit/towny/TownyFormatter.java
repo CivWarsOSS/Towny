@@ -767,7 +767,7 @@ public class TownyFormatter {
 		
 		String field = "";
 		
-		for (CustomDataField cdf : to.getMetadata()) {
+		for (CustomDataField cdf : to.get_metadata()) {
 			if (!cdf.hasLabel())
 				continue;
 			
@@ -813,7 +813,7 @@ public class TownyFormatter {
 
 		String field = "";
 
-		for (CustomDataField cdf : tb.getMetadata()) {
+		for (CustomDataField cdf : tb.get_metadata()) {
 			if (!cdf.hasLabel())
 				continue;
 
