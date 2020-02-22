@@ -12,6 +12,7 @@ import com.palmergames.bukkit.towny.TownyUniverse;
 import com.palmergames.bukkit.towny.exceptions.EconomyException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
+import com.palmergames.bukkit.towny.object.EconomyHandler;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.ResidentList;
@@ -484,26 +485,6 @@ public class TownyCommand extends BaseCommand implements CommandExecutor {
 				output.add(Colors.Yellow + "Nation [" + TownyFormatter.getFormattedName(nation) + "]");
 				output.add(Colors.Rose + "    [Taxes] " + Colors.Green + "Town: " + Colors.LightGreen + nation.getTaxes() + Colors.Gray + " | " + Colors.Green + "Peace: " + Colors.LightGreen + TownyEconomyHandler.getFormattedBalance(TownySettings.getNationNeutralityCost()));
 			}
-		}
-		return output;
-	}
-
-	public List<String> getTopBankBalance(List<EconomyAccount> list, int maxListing) throws EconomyException {
-
-		List<String> output = new ArrayList<>();
-		KeyValueTable<EconomyAccount, Double> kvTable = new KeyValueTable<>();
-		for (EconomyAccount obj : list) {
-			kvTable.put(obj, obj.getHoldingBalance());
-		}
-		kvTable.sortByValue();
-		kvTable.reverse();
-		int n = 0;
-		for (KeyValue<EconomyAccount, Double> kv : kvTable.getKeyValues()) {
-			n++;
-			if (maxListing != -1 && n > maxListing)
-				break;
-			EconomyAccount town = kv.key;
-			output.add(String.format(Colors.LightGray + "%-20s " + Colors.Gold + "|" + Colors.Blue + " %s", TownyFormatter.getFormattedName(town), TownyEconomyHandler.getFormattedBalance(kv.value)));
 		}
 		return output;
 	}

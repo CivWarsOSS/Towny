@@ -37,6 +37,10 @@ public class EconomyAccount implements Nameable {
 	public String getName() {
 		return name;
 	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	private static final class TownyServerAccount extends EconomyAccount {
 		TownyServerAccount() {

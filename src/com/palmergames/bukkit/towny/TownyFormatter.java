@@ -4,6 +4,7 @@ import com.palmergames.bukkit.towny.exceptions.EconomyException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Coord;
+import com.palmergames.bukkit.towny.object.Nameable;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.ResidentList;
@@ -22,6 +23,7 @@ import com.palmergames.bukkit.util.Colors;
 import com.palmergames.util.StringMgmt;
 import org.bukkit.entity.Player;
 
+import javax.naming.Name;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -702,6 +704,10 @@ public class TownyFormatter {
 			return getFormattedNationName((Nation) obj);
 		// System.out.println("just name: " + obj.getName());
 		return obj.getName().replaceAll("_", " ");
+	}
+	
+	public static String getFormattedName(Nameable obj) {
+		return  obj.getName().replaceAll("_", " ");
 	}
 
 	public static String getFormattedResidentName(Resident resident) {
