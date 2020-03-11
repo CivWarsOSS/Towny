@@ -8,7 +8,7 @@ import com.palmergames.bukkit.towny.exceptions.AlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Nation;
-import com.palmergames.bukkit.towny.object.PlotObjectGroup;
+import com.palmergames.bukkit.towny.object.PlotGroup;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
@@ -225,7 +225,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		return dataFolderPath + File.separator + "townblocks" + File.separator + townBlock.getWorld().getName() + File.separator + townBlock.getX() + "_" + townBlock.getZ() + "_" + TownySettings.getTownBlockSize() + ".data";
 	}
 	
-	public String getPlotGroupFilename(PlotObjectGroup group) {
+	public String getPlotGroupFilename(PlotGroup group) {
 		return dataFolderPath + File.separator + "plotgroups" + File.separator + group.getID() + ".data";
 	}
 
@@ -541,8 +541,30 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		
 	}
 
+	/**
+	 * Function which reads from a resident, town, nation, townyobject file, returning a hashmap. 
+	 * 
+	 * @param file - File from which the HashMap will be made.
+	 * @return HashMap<String, String> - Used for loading keys and values from object files. 
+	 */
+	public HashMap<String, String> loadFileIntoHashMap(File file) {
+		HashMap<String, String> keys = new HashMap<>();
+		try (FileInputStream fis = new FileInputStream(file);
+			InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8)) {					
+					Properties properties = new Properties();
+					properties.load(isr);		
+					for (String key : properties.stringPropertyNames()) {
+						String value = properties.getProperty(key);
+						keys.put(key, String.valueOf(value));
+					}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}		
+		return keys;
+	}
+	
 	/*
-	 * Load individual towny object
+	 * Load individual towny objects
 	 */
 	
 	@Override
@@ -554,13 +576,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		if (fileResident.exists() && fileResident.isFile()) {
 			TownyMessaging.sendDebugMsg("Loading Resident: " + resident.getName());
 			try {
-				HashMap<String, String> keys = new HashMap<>();
-				Properties properties = new Properties();
-				properties.load(new InputStreamReader(new FileInputStream(fileResident), StandardCharsets.UTF_8));
-				for (String key : properties.stringPropertyNames()) {
-					String value = properties.getProperty(key);
-					keys.put(key, String.valueOf(value));
-				}
+				HashMap<String, String> keys = loadFileIntoHashMap(fileResident);
 				
 				resident.setLastOnline(Long.parseLong(keys.get("lastOnline")));
 				
@@ -657,14 +673,8 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		if (fileTown.exists() && fileTown.isFile()) {
 			TownyMessaging.sendDebugMsg("Loading Town: " + town.getName());
 			try {
-				HashMap<String, String> keys = new HashMap<>();
-				Properties properties = new Properties();
-				properties.load(new InputStreamReader(new FileInputStream(fileTown), StandardCharsets.UTF_8));
-				for (String key : properties.stringPropertyNames()) {
-					String value = properties.getProperty(key);
-					keys.put(key, String.valueOf(value));
-				}
-				
+				HashMap<String, String> keys = loadFileIntoHashMap(fileTown);
+
 				line = keys.get("residents");
 				if (line != null) {
 					tokens = line.split(",");
@@ -969,7 +979,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 				line = keys.get("metadata");
 				if (line != null && !line.isEmpty())
 					town.setMetadata(line.trim());
-				
+
 			} catch (Exception e) {
 				TownyMessaging.sendErrorMsg("Loading Error: Exception while reading town file " + town.getName() + " at line: " + line + ", in towny\\data\\towns\\" + town.getName() + ".txt");
 				return false;
@@ -993,13 +1003,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		if (fileNation.exists() && fileNation.isFile()) {
 			TownyMessaging.sendDebugMsg("Loading Nation: " + nation.getName());
 			try {
-				HashMap<String, String> keys = new HashMap<>();
-				Properties properties = new Properties();
-				properties.load(new InputStreamReader(new FileInputStream(fileNation), StandardCharsets.UTF_8));
-				for (String key : properties.stringPropertyNames()) {
-					String value = properties.getProperty(key);
-					keys.put(key, String.valueOf(value));
-				}
+				HashMap<String, String> keys = loadFileIntoHashMap(fileNation);
 				
 				line = keys.get("towns");
 				if (line != null) {
@@ -1140,7 +1144,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 				line = keys.get("metadata");
 				if (line != null && !line.isEmpty())
 					nation.setMetadata(line.trim());
-				
+
 			} catch (Exception e) {
 				TownyMessaging.sendErrorMsg("Loading Error: Exception while reading nation file " + nation.getName() + " at line: " + line + ", in towny\\data\\nations\\" + nation.getName() + ".txt");
 				e.printStackTrace();
@@ -1170,13 +1174,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		if (fileWorld.exists() && fileWorld.isFile()) {
 			TownyMessaging.sendDebugMsg("Loading World: " + world.getName());
 			try {
-				HashMap<String, String> keys = new HashMap<>();
-				Properties properties = new Properties();
-				properties.load(new InputStreamReader(new FileInputStream(fileWorld), StandardCharsets.UTF_8));
-				for (String key : properties.stringPropertyNames()) {
-					String value = properties.getProperty(key);
-					keys.put(key, String.valueOf(value));
-				}
+				HashMap<String, String> keys = loadFileIntoHashMap(fileWorld);
 				
 				line = keys.get("towns");
 				if (line != null) {
@@ -1441,24 +1439,18 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		String line = "";
 		String path;
 		
-		for (PlotObjectGroup group : getAllPlotGroups()) {
+		for (PlotGroup group : getAllPlotGroups()) {
 			path = getPlotGroupFilename(group);
 			
 			File groupFile = new File(path);
 			if (groupFile.exists() && groupFile.isFile()) {
 				String test = null;
 				try {
-					HashMap<String, String> keys = new HashMap<>();
-					Properties properties = new Properties();
-					properties.load(new InputStreamReader(new FileInputStream(groupFile), StandardCharsets.UTF_8));
-					for (String key : properties.stringPropertyNames()) {
-						String value = properties.getProperty(key);
-						keys.put(key, String.valueOf(value));
-					}
-					
+					HashMap<String, String> keys = loadFileIntoHashMap(groupFile);
+
 					line = keys.get("groupName");
 					if (line != null)
-						group.setGroupName(line.trim());
+						group.setName(line.trim());
 					
 					line = keys.get("groupID");
 					if (line != null)
@@ -1478,8 +1470,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 					line = keys.get("groupPrice");
 					if (line != null && !line.isEmpty())
 						group.setPrice(Double.parseDouble(line.trim()));
-						
-					
+
 				} catch (Exception e) {
 					if (test.equals("town")) {
 						TownyMessaging.sendDebugMsg("Group file missing Town, deleting " + path);
@@ -1514,20 +1505,14 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 			if (fileTownBlock.exists() && fileTownBlock.isFile()) {
 				String test = null;
 				try {
-					HashMap<String, String> keys = new HashMap<>();
-					Properties properties = new Properties();
-					properties.load(new InputStreamReader(new FileInputStream(fileTownBlock), StandardCharsets.UTF_8));
-					for (String key : properties.stringPropertyNames()) {
-						String value = properties.getProperty(key);
-						keys.put(key, String.valueOf(value));
-					}
+					HashMap<String, String> keys = loadFileIntoHashMap(fileTownBlock);			
 
 					test = "town";
 					line = keys.get("town");
 					if (line != null)
 						if (line.isEmpty()) {
-							TownyMessaging.sendDebugMsg("TownBlock file missing Town, deleting " + path);							
-							TownyMessaging.sendDebugMsg("Missing file: " + path + " deleting entry in townblocks.txt");
+							TownyMessaging.sendErrorMsg("TownBlock file missing Town, deleting " + path);							
+							TownyMessaging.sendErrorMsg("Missing file: " + path + " deleting entry in townblocks.txt");
 							TownyWorld world = townBlock.getWorld();
 							world.removeTownBlock(townBlock);
 							deleteTownBlock(townBlock);
@@ -1609,14 +1594,14 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 					}
 					
 					if (groupID != null) {
-						PlotObjectGroup group = getPlotObjectGroup(townBlock.getTown().toString(), groupID);
+						PlotGroup group = getPlotObjectGroup(townBlock.getTown().toString(), groupID);
 						townBlock.setPlotObjectGroup(group);
 					}
 
 				} catch (Exception e) {
 					if (test == "town") {
-						TownyMessaging.sendDebugMsg("TownBlock file missing Town, deleting " + path);						
-						TownyMessaging.sendDebugMsg("Missing file: " + path + " deleting entry in townblocks.txt");
+						TownyMessaging.sendErrorMsg("TownBlock file missing Town, deleting " + path);						
+						TownyMessaging.sendErrorMsg("Missing file: " + path + " deleting entry in townblocks.txt");
 						TownyWorld world = townBlock.getWorld();
 						world.removeTownBlock(townBlock);
 						deleteTownBlock(townBlock);
@@ -1664,8 +1649,8 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 	public boolean savePlotGroupList() {
 		List<String> list = new ArrayList<>();
 		
-		for (PlotObjectGroup group : getAllPlotGroups()) {
-			list.add(group.getTown().getName() + "," + group.getID() + "," + group.getGroupName());
+		for (PlotGroup group : getAllPlotGroups()) {
+			list.add(group.getTown().getName() + "," + group.getID() + "," + group.getName());
 		}
 		
 		this.queryQueue.add(new FlatFile_Task(list, dataFolderPath + File.separator + "plotgroups.txt"));
@@ -1945,7 +1930,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 	}
 	
 	@Override
-	public boolean savePlotGroup(PlotObjectGroup group) {
+	public boolean savePlotGroup(PlotGroup group) {
 		
 		List<String> list = new ArrayList<>();
 		
@@ -1953,7 +1938,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		list.add("groupID=" + group.getID().toString());
 		
 		// Group Name
-		list.add("groupName=" + group.getGroupName());
+		list.add("groupName=" + group.getName());
 		
 		// Group Price
 		list.add("groupPrice=" + group.getPrice());
@@ -2246,7 +2231,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 		StringBuilder groupName = new StringBuilder();
 		if (townBlock.hasPlotObjectGroup()) {
 			groupID.append(townBlock.getPlotObjectGroup().getID());
-			groupName.append(townBlock.getPlotObjectGroup().getGroupName());
+			groupName.append(townBlock.getPlotObjectGroup().getName());
 		}
 		
 		list.add("groupID=" + groupID.toString());
@@ -2636,7 +2621,7 @@ public final class TownyFlatFileSource extends TownyDatabaseHandler {
 	}
 	
 	@Override
-	public void deletePlotGroup(PlotObjectGroup group) {
+	public void deletePlotGroup(PlotGroup group) {
     	File file = new File(getPlotGroupFilename(group));
     	if (file.exists())
     		file.deleteOnExit();

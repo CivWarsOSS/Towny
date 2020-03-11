@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Resident extends TownyObject implements ResidentModes, TownyInviteReceiver, EconomyHandler, TownBlockOwner {
+public class Resident extends TownyObject implements TownyInviteReceiver, EconomyHandler, TownBlockOwner {
 	private List<Resident> friends = new ArrayList<>();
 	// private List<Object[][][]> regenUndo = new ArrayList<>(); // Feature is disabled as of MC 1.13, maybe it'll come back.
 	private Town town = null;
@@ -349,8 +349,7 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 		for (Resident resident : new ArrayList<>(friends))
 			try {
 				removeFriend(resident);
-			} catch (NotRegisteredException e) {
-			}
+			} catch (NotRegisteredException ignored) {}
 	}
 
 	public void clear() throws EmptyTownException {
@@ -364,8 +363,7 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 				setTitle("");
 				setSurname("");
 				updatePerms();
-			} catch (NotRegisteredException e) {
-			}
+			} catch (NotRegisteredException ignored) {}
 	}
 
 	public void updatePerms() {
@@ -465,21 +463,18 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 //
 //		}
 //	}	
-
-	@Override
+	
 	public List<String> getModes() {
 
 		return this.modes;
 	}
-
-	@Override
+	
 	public boolean hasMode(String mode) {
 
 		return this.modes.contains(mode.toLowerCase());
 	}
-
-	@Override
-	public void toggleMode(String newModes[], boolean notify) {
+	
+	public void toggleMode(String[] newModes, boolean notify) {
 
 		/*
 		 * Toggle any modes passed to us on/off.
@@ -504,8 +499,7 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 		if (notify)
 			TownyMessaging.sendMsg(this, (TownySettings.getLangString("msg_modes_set") + StringMgmt.join(getModes(), ",")));
 	}
-
-	@Override
+	
 	public void setModes(String[] modes, boolean notify) {
 
 		this.modes.clear();
@@ -516,8 +510,7 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 
 
 	}
-
-	@Override
+	
 	public void clearModes() {
 
 		this.modes.clear();
@@ -560,7 +553,9 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 	}
 
 	public void setTownRanks(List<String> ranks) {
-		townRanks.addAll(ranks);
+		for (String rank : ranks) 
+			if (!this.hasTownRank(rank))
+				townRanks.add(rank);
 	}
 
 	public boolean hasTownRank(String rank) {
@@ -601,7 +596,9 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 	}
 
 	public void setNationRanks(List<String> ranks) {
-		nationRanks.addAll(ranks);
+		for (String rank : ranks)
+			if (!this.hasNationRank(rank))
+				nationRanks.add(rank);
 	}
 
 	public boolean hasNationRank(String rank) {
@@ -695,13 +692,59 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 			if (player != null) {
 				world = player.getWorld();
 			} else {
-				world = BukkitTools.getWorlds().get(0);;
+				world = BukkitTools.getWorlds().get(0);
 			}
 
 			account = new EconomyAccount(accountName, world);
 		}
 		
 		return account;
+	}
+
+	@Override
+	public String getFormattedName() {
+		if (isKing()) {
+			return (hasTitle() ? getTitle() + " " : TownySettings.getKingPrefix(this)) + getName() + (hasSurname() ? " " + getSurname() : TownySettings.getKingPostfix(this));
+		}
+			
+		if (isMayor()) {
+			return (hasTitle() ? getTitle() + " " : TownySettings.getMayorPrefix(this)) + getName() + (hasSurname() ? " " + getSurname() : TownySettings.getMayorPostfix(this));
+		}
+			
+		return (hasTitle() ? getTitle() + " " : "") + getName() + (hasSurname() ? " " + getSurname() : "");
+	}
+
+	/**
+	 * Returns King or Mayor prefix set in the Town and Nation Levels of the config.
+	 * 
+	 * @return Prefix of a King or Mayor if resident is a king or mayor.
+	 */	
+	public String getNamePrefix() {
+		if (isKing())
+			return TownySettings.getKingPrefix(this);
+		if (isMayor())
+			return TownySettings.getMayorPrefix(this);
+		return "";
+	}
+	
+	/**
+	 * Returns King or Mayor postfix set in the Town and Nation Levels of the config.
+	 * 
+	 * @return Postfix of a King or Mayor if resident is a king or mayor.
+	 */	
+	public String getNamePostfix() {
+		if (isKing())
+			return TownySettings.getKingPostfix(this);
+		if (isMayor())
+			return TownySettings.getMayorPostfix(this);
+		return "";
+	}
+	
+	public String getFormattedTitleName() {
+		if (!hasTitle())
+			return getFormattedName();
+		else
+			return getTitle() + " " + getName();
 	}
 
 	@Override
@@ -745,8 +788,13 @@ public class Resident extends TownyObject implements ResidentModes, TownyInviteR
 		return permissions;
 	}
 
+	/**
+	 * @deprecated As of 0.97.0.0+ please use {@link EconomyAccount#getWorld()} instead.
+	 *
+	 * @return The world this resides in.
+	 */
 	@Deprecated
-	protected World getBukkitWorld() {
+	public World getBukkitWorld() {
 		Player player = BukkitTools.getPlayer(getName());
 		if (player != null) {
 			return player.getWorld();

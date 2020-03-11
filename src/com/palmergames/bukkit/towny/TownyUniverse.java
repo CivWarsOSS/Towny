@@ -8,7 +8,7 @@ import com.palmergames.bukkit.towny.exceptions.KeyAlreadyRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.object.Coord;
 import com.palmergames.bukkit.towny.object.Nation;
-import com.palmergames.bukkit.towny.object.PlotObjectGroup;
+import com.palmergames.bukkit.towny.object.PlotGroup;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
@@ -21,6 +21,7 @@ import com.palmergames.bukkit.towny.tasks.OnPlayerLogin;
 import com.palmergames.bukkit.towny.war.eventwar.War;
 import com.palmergames.bukkit.util.BukkitTools;
 import com.palmergames.util.FileMgmt;
+import com.palmergames.util.Trie;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -30,10 +31,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.List;
-import java.util.HashMap;
 
 /**
  * Towny's class for internal API Methods
@@ -47,8 +48,11 @@ public class TownyUniverse {
     private final Towny towny;
     
     private final ConcurrentHashMap<String, Resident> residents = new ConcurrentHashMap<>();
+    private final Trie residentsTrie = new Trie();
     private final ConcurrentHashMap<String, Town> towns = new ConcurrentHashMap<>();
+    private final Trie townsTrie = new Trie();
     private final ConcurrentHashMap<String, Nation> nations = new ConcurrentHashMap<>();
+    private final Trie nationsTrie = new Trie();
     private final ConcurrentHashMap<String, TownyWorld> worlds = new ConcurrentHashMap<>();
     private final HashMap<String, CustomDataField> registeredMetadata = new HashMap<>();
     private final List<Resident> jailedResidents = new ArrayList<>();
@@ -74,13 +78,9 @@ public class TownyUniverse {
             e.printStackTrace();
             return false;
         }
+		// Init logger
+		TownyLogger.getInstance();
         
-		// Enable debug logger if set in the config.
-		if (TownySettings.getDebug()) {
-			TownyLogger.getInstance().enableDebugLogger();
-			TownyLogger.getInstance().updateLoggers();
-		}
-		
         String saveDbType = TownySettings.getSaveDatabase();
         String loadDbType = TownySettings.getLoadDatabase();
         
@@ -91,10 +91,13 @@ public class TownyUniverse {
         
         clearAll();
                 
+        long startTime = System.currentTimeMillis();
         if (!loadDatabase(loadDbType)) {
             System.out.println("[Towny] Error: Failed to load!");
             return false;
         }
+        long time = System.currentTimeMillis() - startTime;
+        System.out.println("[Towny] Database loaded in " + time + "ms.");
         
         try {
             dataSource.cleanupBackups();
@@ -149,6 +152,7 @@ public class TownyUniverse {
             }
             towny.saveResource("outpostschecked.txt", false);
         }
+        
         return true;
     }
     
@@ -199,6 +203,7 @@ public class TownyUniverse {
         try {
             Resident resident = dataSource.getResident(player.getName());
             resident.setLastOnline(System.currentTimeMillis());
+            resident.clearModes();
             dataSource.saveResident(resident);
         } catch (NotRegisteredException ignored) {
         }
@@ -259,10 +264,18 @@ public class TownyUniverse {
         return nations;
     }
     
+    public Trie getNationsTrie() {
+    	return nationsTrie;
+	}
+	
     public ConcurrentHashMap<String, Resident> getResidentMap() {
         return residents;
     }
-    
+
+	public Trie getResidentsTrie() {
+		return residentsTrie;
+	}
+	
     public List<Resident> getJailedResidentMap() {
         return jailedResidents;
     }
@@ -271,6 +284,10 @@ public class TownyUniverse {
         return towns;
     }
     
+    public Trie getTownsTrie() {
+    	return townsTrie;
+	}
+	
     public ConcurrentHashMap<String, TownyWorld> getWorldMap() {
         return worlds;
     }
@@ -394,8 +411,8 @@ public class TownyUniverse {
 	 * 
 	 * @return collection of PlotObjectGroup
 	 */
-	public Collection<PlotObjectGroup> getGroups() {
-    	List<PlotObjectGroup> groups = new ArrayList<>();
+	public Collection<PlotGroup> getGroups() {
+    	List<PlotGroup> groups = new ArrayList<>();
     	
 		for (Town town : towns.values()) {
 			if (town.hasObjectGroups()) {
@@ -414,7 +431,7 @@ public class TownyUniverse {
 	 * @param groupID UUID of the plot group
 	 * @return PlotGroup if found, null if none found.
 	 */
-	public PlotObjectGroup getGroup(String townName, UUID groupID) {
+	public PlotGroup getGroup(String townName, UUID groupID) {
 		Town t = null;
 		try {
 			t = TownyUniverse.getInstance().getDataSource().getTown(townName);
@@ -435,7 +452,7 @@ public class TownyUniverse {
 	 * @param groupName Plot Group Name
 	 * @return the plot group if found, otherwise null
 	 */
-	public PlotObjectGroup getGroup(String townName, String groupName) {
+	public PlotGroup getGroup(String townName, String groupName) {
 		Town t = towns.get(townName);
 
 		if (t != null) {
@@ -449,13 +466,13 @@ public class TownyUniverse {
 		return getRegisteredMetadata();
 	}
 
-	public PlotObjectGroup newGroup(Town town, String name, UUID id) throws AlreadyRegisteredException {
+	public PlotGroup newGroup(Town town, String name, UUID id) throws AlreadyRegisteredException {
     	
     	// Create new plot group.
-		PlotObjectGroup newGroup = new PlotObjectGroup(id, name, town);
+		PlotGroup newGroup = new PlotGroup(id, name, town);
 		
 		// Check if there is a duplicate
-		if (town.hasObjectGroupName(newGroup.getGroupName())) {
+		if (town.hasObjectGroupName(newGroup.getName())) {
 			TownyMessaging.sendErrorMsg("group " + town.getName() + ":" + id + " already exists"); // FIXME Debug message
 			throw new AlreadyRegisteredException();
 		}
@@ -471,7 +488,7 @@ public class TownyUniverse {
 	}
 
 
-	public void removeGroup(PlotObjectGroup group) {
+	public void removeGroup(PlotGroup group) {
 		group.getTown().removePlotGroup(group);
 		
 	}

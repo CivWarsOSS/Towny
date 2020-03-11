@@ -43,6 +43,10 @@ public class DailyTimerTask extends TownyTimerTask {
 	public void run() {
 
 		long start = System.currentTimeMillis();
+		totalTownUpkeep = 0.0;
+		totalNationUpkeep = 0.0;
+		removedTowns.clear();
+		removedNations.clear();
 
 		TownyMessaging.sendDebugMsg("New Day");
 
@@ -143,7 +147,7 @@ public class DailyTimerTask extends TownyTimerTask {
 		TownyMessaging.sendDebugMsg(String.format("%8d Mb (total)", Runtime.getRuntime().totalMemory() / 1024 / 1024));
 		TownyMessaging.sendDebugMsg(String.format("%8d Mb (free)", Runtime.getRuntime().freeMemory() / 1024 / 1024));
 		TownyMessaging.sendDebugMsg(String.format("%8d Mb (used=total-free)", (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024));
-		TownyMessaging.sendDebugMsg("newDay took " + (System.currentTimeMillis() - start) + "ms");
+		System.out.println("Towny DailyTimerTask took " + (System.currentTimeMillis() - start) + "ms to process.");
 	}
 
 	/**
@@ -176,8 +180,10 @@ public class DailyTimerTask extends TownyTimerTask {
 	 * @throws EconomyException - EconomyException
 	 */
 	protected void collectNationTaxes(Nation nation) throws EconomyException {
+		
 		if (nation.getTaxes() > 0) {
 
+			List<String> localRemovedTowns = new ArrayList<>();
 			List<Town> towns = new ArrayList<>(nation.getTowns());
 			ListIterator<Town> townItr = towns.listIterator();
 			Town town;
@@ -196,7 +202,7 @@ public class DailyTimerTask extends TownyTimerTask {
 						continue;
 					if (!town.getAccount().payTo(nation.getTaxes(), nation, "Nation Tax")) {
 						try {
-							removedTowns.add(town.getName());
+							localRemovedTowns.add(town.getName());							
 							nation.removeTown(town);							
 						} catch (EmptyNationException e) {
 							// Always has 1 town (capital) so ignore
@@ -208,11 +214,11 @@ public class DailyTimerTask extends TownyTimerTask {
 				} else
 					TownyMessaging.sendPrefixedTownMessage(town, TownySettings.getPayedTownTaxMsg() + nation.getTaxes());
 			}
-			if (removedTowns != null) {
-				if (removedTowns.size() == 1) 
-					TownyMessaging.sendNationMessagePrefixed(nation, String.format(TownySettings.getLangString("msg_couldnt_pay_tax"), ChatTools.list(removedTowns), "nation"));
+			if (localRemovedTowns != null) {
+				if (localRemovedTowns.size() == 1) 
+					TownyMessaging.sendNationMessagePrefixed(nation, String.format(TownySettings.getLangString("msg_couldnt_pay_tax"), ChatTools.list(localRemovedTowns), "nation"));
 				else
-					TownyMessaging.sendNationMessagePrefixed(nation, ChatTools.list(removedTowns, TownySettings.getLangString("msg_couldnt_pay_nation_tax_multiple")));
+					TownyMessaging.sendNationMessagePrefixed(nation, ChatTools.list(localRemovedTowns, TownySettings.getLangString("msg_couldnt_pay_nation_tax_multiple")));
 			}
 		}
 
